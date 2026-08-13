@@ -1,12 +1,13 @@
 from fastapi import APIRouter
-from ..schemas.task import CreateTaskRequest, UpdateTaskRequest, TaskResponse
+
 from ..handlers.tasks_handlers import (
     create_task,
+    delete_single_task,
     get_all_tasks,
     get_single_task,
     update_single_task,
-    delete_single_task,
 )
+from ..schemas.task import CreateTaskRequest, TaskResponse, UpdateTaskRequest
 
 router = APIRouter()
 

@@ -17,3 +17,11 @@ build-backend = "uv_build"
 
 [tool.fastapi]
 entrypoint = "python_project.main:app"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.2",
+]
+
+[tool.ruff]
+target-version = "py312"
