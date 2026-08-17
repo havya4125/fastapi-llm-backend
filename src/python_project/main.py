@@ -1,9 +1,11 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .routes.task_routes import router
+from .routes.router import router
 
+load_dotenv()
 app = FastAPI()
 
 app.include_router(router)
