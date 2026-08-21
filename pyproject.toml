@@ -8,6 +8,7 @@ dependencies = [
     "anthropic>=0.122.0",
     "fastapi[standard]>=0.128.8",
     "python-dotenv>=1.2.1",
+    "uuid>=1.30",
 ]
 
 [project.scripts]
