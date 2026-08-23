@@ -84,6 +84,28 @@ def claude():
     print(tool_call.input)
     result = create_task_tool(** tool_call.input)
     print(result)
-
+    messages = [{
+            "role" : "user",
+            "content" : "Create me a task to learn fast api"
+        }, {
+            "role" : "assistant",
+            "content" : response.content
+        }, {
+            "role" : "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id" : tool_call.id,
+                    "content" : str(result)
+                }
+            ]
+        }]
+    final_response = client.messages.create(
+        model='claude-haiku-4-5',
+        max_tokens=1024,
+        messages= messages,
+        tools=tools
+    )
+    print(final_response.content)
 if __name__ == "__main__":
     claude()
