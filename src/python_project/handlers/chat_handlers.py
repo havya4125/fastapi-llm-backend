@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.sse import ServerSentEvent
 
 from ..schemas.chat import ChatRequest
 from ..services.claude_service import ask_claude, stream_claude
@@ -55,12 +55,21 @@ def chat_stream(request: ChatRequest):
     def generate():
         full_response = ""
 
+        yield ServerSentEvent(
+            event="conversation",
+            data={"conversation_id" : conversation_id}
+        )
         for chunk in stream_response:
             full_response += chunk
-            yield chunk
+            yield ServerSentEvent(
+                event="message",
+                data={"content" : chunk}
+            )
         append_assistant_message(messages, full_response)
         conversations[conversation_id] = messages
-    return StreamingResponse(
-        generate(),
-        media_type= "text/plain"
-    )
+
+        yield ServerSentEvent(
+            event="done",
+            data={"conversation_id" : conversation_id}
+        )
+    return generate()
