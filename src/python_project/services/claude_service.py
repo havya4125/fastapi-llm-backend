@@ -3,6 +3,8 @@ import os
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+from ..schemas.task import TaskSuggestion
+
 load_dotenv()
 client = Anthropic(
     api_key= os.environ.get("ANTHROPIC_API_KEY")
@@ -31,3 +33,12 @@ def stream_claude(messages, system_prompt: str | None = None):
     
     with client.messages.stream(**params) as stream:
         yield from stream.text_stream
+
+def generate_task_suggestion(messages):
+    response = client.messages.parse(
+        model='claude-haiku-4-5',
+        max_tokens=1024,
+        messages= messages,
+        output_format=TaskSuggestion
+    )
+    return response.parsed_output

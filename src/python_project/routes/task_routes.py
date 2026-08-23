@@ -5,9 +5,16 @@ from ..handlers.tasks_handlers import (
     delete_single_task,
     get_all_tasks,
     get_single_task,
+    task_suggestion,
     update_single_task,
 )
-from ..schemas.task import CreateTaskRequest, TaskResponse, UpdateTaskRequest
+from ..schemas.task import (
+    CreateTaskRequest,
+    TaskResponse,
+    TaskSuggestion,
+    TaskSuggestionRequest,
+    UpdateTaskRequest,
+)
 
 router = APIRouter()
 
@@ -35,3 +42,7 @@ def update_task_route(task_id: int, task: UpdateTaskRequest):
 @router.delete("/tasks/{task_id}", status_code=204)
 def delete_task_route(task_id: int):
     return delete_single_task(task_id)
+
+@router.post('/task/suggest', status_code=201, response_model= TaskSuggestion)
+def generate_task_suggstion(task: TaskSuggestionRequest):
+    return task_suggestion(task)

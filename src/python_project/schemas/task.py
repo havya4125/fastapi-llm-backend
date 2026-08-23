@@ -20,3 +20,11 @@ class TaskResponse(BaseModel):
     description: str | None = None
     priority: str
     completed: bool
+
+class TaskSuggestion(BaseModel):
+    title: str
+    priority: str
+    estimated_hours: int
+
+class TaskSuggestionRequest(BaseModel):
+    message: str
