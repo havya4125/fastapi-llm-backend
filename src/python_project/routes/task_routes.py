@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 
+from ..handlers.suggestion_handlers import task_suggestion
 from ..handlers.tasks_handlers import (
     create_task,
     delete_single_task,
     get_all_tasks,
     get_single_task,
-    task_suggestion,
     update_single_task,
 )
 from ..schemas.task import (

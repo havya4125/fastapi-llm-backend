@@ -1,8 +1,5 @@
 from fastapi import HTTPException
 
-from ..services.claude_service import generate_task_suggestion
-from ..utils import append_user_message
-
 tasks = []
 
 
@@ -51,10 +48,3 @@ def delete_single_task(task_id):
             return
 
     raise HTTPException(status_code=404, detail=f"No task found with id {task_id}")
-
-# Handler for generating task suggestion
-def task_suggestion(task):
-    messages = []
-    append_user_message(messages, task.message)
-    response = generate_task_suggestion(messages)
-    return response
