@@ -1,3 +1,4 @@
+
 from ..tools.registry import tool_registry
 from ..tools.tool_definitions import task_tools
 from ..utils import append_assistant_message, append_user_message
@@ -12,21 +13,24 @@ and assist them in organizing their work effectively.
 def run_agent(message: str):
     messages = []
     append_user_message(messages, message)
-    response = ask_claude(messages, system_prompt, task_tools)
-    print(response)
-    tool_call = response.content[0]
-    tool_function = tool_registry[tool_call.name]
-    result = tool_function(**tool_call.input)
-    append_assistant_message(messages, response.content)
-    messages.append({
-        "role": "user",
-        "content": [
-            {
-                "type": "tool_result",
-                "tool_use_id": tool_call.id,
-                "content" : str(result)
-            }
-        ]
-    })
-    final_response = ask_claude(messages, system_prompt, task_tools)
-    return final_response.content[0].text
+    while True:
+        response = ask_claude(messages, system_prompt, task_tools)
+
+        if response.stop_reason != "tool_use":
+            return response.content[0].text
+    
+        tool_results = []
+
+        for block in response.content:
+        
+            if block.type != 'tool_use':
+                continue
+            tool_function = tool_registry[block.name]
+            result = tool_function(**block.input)
+            tool_results.append({
+            "type":"tool_result",
+            "tool_use_id" : block.id,
+            "content" : str(result)
+            })
+        append_assistant_message(messages, response.content)
+        append_user_message(messages, tool_results)
