@@ -2,9 +2,9 @@ import os
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 from ..schemas.task import TaskSuggestion
-from ..tools.tasks_tools import create_task_tool
 
 load_dotenv()
 client = Anthropic(
@@ -70,43 +70,13 @@ def generate_task_suggestion(messages):
     )
     return response.parsed_output
 
-def claude():
-    response = client.messages.create(
-        model='claude-haiku-4-5',
-        max_tokens=1024,
-        messages= [{
-            "role" : "user",
-            "content" : "Create me a task to learn fast api"
-        }],
-        tools=tools
-    )
-    tool_call = response.content[0]
-    print(tool_call.name)
-    print(tool_call.input)
-    result = create_task_tool(** tool_call.input)
-    print(result)
-    messages = [{
-            "role" : "user",
-            "content" : "Create me a task to learn fast api"
-        }, {
-            "role" : "assistant",
-            "content" : response.content
-        }, {
-            "role" : "user",
-            "content": [
-                {
-                    "type": "tool_result",
-                    "tool_use_id" : tool_call.id,
-                    "content" : str(result)
-                }
-            ]
-        }]
-    final_response = client.messages.create(
-        model='claude-haiku-4-5',
-        max_tokens=1024,
-        messages= messages,
-        tools=tools
-    )
-    print(final_response.content)
-if __name__ == "__main__":
-    claude()
+def generate_structured_response(messages: list, output_format: type[BaseModel] | None = None):
+    params = {
+        "model" : "claude-haiku-4-5",
+        "max_tokens" : 1024,
+        "messages" : messages
+    }
+    if output_format:
+        params["output_format"] = output_format
+    response = client.messages.parse(** params)
+    return response.parsed_output
