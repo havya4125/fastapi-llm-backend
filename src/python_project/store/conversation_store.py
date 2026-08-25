@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from .exception import ConversationNotFoundEror
+
 conversations: dict[str, list] = {}
 
 def create_conversation() -> str:
@@ -10,7 +12,7 @@ def create_conversation() -> str:
 
 def get_conversation(conversation_id : str) -> list:
     if conversation_id not in conversations:
-        raise ValueError(
+        raise ConversationNotFoundEror(
             f"Conversation {conversation_id} not found"
         )
     return conversations[conversation_id]

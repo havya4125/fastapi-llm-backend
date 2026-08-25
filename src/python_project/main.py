@@ -4,6 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from .routes.router import router
+from .store.exception import ConversationNotFoundEror
 
 load_dotenv()
 app = FastAPI()
@@ -31,6 +32,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                 "code": 422,
                 "message": "Request validation failed",
                 "details": exc.errors(),
+            }
+        }
+    )
+
+@app.exception_handler(ConversationNotFoundEror)
+async def conversation_not_found_handler(request: Request, exc: ConversationNotFoundEror):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": {
+                "code": 404,
+                "message": str(exc)
             }
         }
     )
