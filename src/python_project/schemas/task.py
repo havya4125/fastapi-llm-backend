@@ -1,10 +1,12 @@
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 
 class CreateTaskRequest(BaseModel):
-    title: str
+    title: str = Field(min_length=1)
     description: str | None = None
-    priority: str
+    priority: Literal["low","medium","high"]
 
 
 class UpdateTaskRequest(BaseModel):
@@ -32,5 +34,5 @@ class TaskSuggestionRequest(BaseModel):
 class UpdateToolTaskRequest(BaseModel):
     title: str | None = None
     description: str | None = None
-    priority: str | None = None
+    priority: Literal["low", "medium", "high"] | None = None
     completed: bool | None = None

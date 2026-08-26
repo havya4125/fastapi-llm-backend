@@ -14,7 +14,7 @@ task_tools = [
                 "priority": {
                     "type": "string",
                     "description": (
-                        "The priority of the task. Use low, medium, or high."
+                        "The priority of the task. Must be one of: low, medium, or high."
                     ),
                 },
                 "description": {
@@ -57,7 +57,7 @@ task_tools = [
                 },
                 "priority": {
                     "type": "string",
-                    "description": "The new priority of the task.",
+                    "description": "The new priority of the task. Must be one of: low, medium, or high.",
                 },
                 "completed": {
                     "type": "boolean",
