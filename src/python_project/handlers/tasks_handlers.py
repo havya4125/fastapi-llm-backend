@@ -33,9 +33,7 @@ def get_single_task(task_id):
 def update_single_task(task_id, task):
     for index, t in enumerate(tasks):
         if t["id"] == task_id:
-            print(task)
             updates = task.model_dump(exclude_none = True)
-            print(updates)
             t.update(updates)
             tasks[index] = t
             return t
