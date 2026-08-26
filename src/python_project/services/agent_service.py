@@ -1,5 +1,6 @@
 
 from ..exceptions.task_exceptions import TaskNotFoundError
+from ..exceptions.tool_exceptions import ToolNotfoundError
 from ..schemas.agent import AgentResponse, AgentResult
 from ..store.conversation_store import (
     create_conversation,
@@ -47,6 +48,10 @@ def run_agent(message: str, conversation_id: str | None = None):
             if block.type != 'tool_use':
                 continue
             tool_function = tool_registry.get(block.name)
+            if tool_function is None:
+                raise ToolNotfoundError(
+                    f"Tool '{block.name}' is not registered"
+                )
             try:
                 result = tool_function(**block.input)
                 tool_results.append({

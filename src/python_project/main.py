@@ -4,6 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from .exceptions.task_exceptions import TaskNotFoundError
+from .exceptions.tool_exceptions import ToolNotfoundError
 from .routes.router import router
 from .store.exception import ConversationNotFoundEror
 
@@ -57,6 +58,18 @@ async def task_not_found_error(reqeust: Request, exc: TaskNotFoundError):
             "error":{
                 "code": 404,
                 "message": str(exc)
+            }
+        }
+    )
+
+@app.exception_handler(ToolNotfoundError)
+async def tool_not_found_error(request: Request, exc: ToolNotfoundError):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code" : 500,
+                "message" : "Something went wrong while processing your request"
             }
         }
     )

@@ -1,0 +1,2 @@
+class ToolNotfoundError(Exception):
+    pass
