@@ -1,4 +1,5 @@
 
+from ..exceptions.task_exceptions import TaskNotFoundError
 from ..schemas.agent import AgentResponse, AgentResult
 from ..store.conversation_store import (
     create_conversation,
@@ -46,11 +47,19 @@ def run_agent(message: str, conversation_id: str | None = None):
             if block.type != 'tool_use':
                 continue
             tool_function = tool_registry.get(block.name)
-            result = tool_function(**block.input)
-            tool_results.append({
+            try:
+                result = tool_function(**block.input)
+                tool_results.append({
                 "type":"tool_result",
                 "tool_use_id" : block.id,
                 "content" : str(result)
+                })
+            except TaskNotFoundError as err:
+                tool_results.append({
+                "type":"tool_result",
+                "tool_use_id" : block.id,
+                "content" : str(err),
+                "is_error": True
                 })
         append_assistant_message(messages, response.content)
         append_user_message(messages, tool_results)

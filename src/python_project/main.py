@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from .exceptions.task_exceptions import TaskNotFoundError
 from .routes.router import router
 from .store.exception import ConversationNotFoundEror
 
@@ -42,6 +43,18 @@ async def conversation_not_found_handler(request: Request, exc: ConversationNotF
         status_code=404,
         content={
             "error": {
+                "code": 404,
+                "message": str(exc)
+            }
+        }
+    )
+
+@app.exception_handler(TaskNotFoundError)
+async def task_not_found_error(reqeust: Request, exc: TaskNotFoundError):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error":{
                 "code": 404,
                 "message": str(exc)
             }
