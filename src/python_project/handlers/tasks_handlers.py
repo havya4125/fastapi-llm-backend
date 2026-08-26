@@ -33,10 +33,12 @@ def get_single_task(task_id):
 def update_single_task(task_id, task):
     for index, t in enumerate(tasks):
         if t["id"] == task_id:
-            updated_task = task.model_dump()
-            updated_task["id"] = task_id
-            tasks[index] = updated_task
-            return updated_task
+            print(task)
+            updates = task.model_dump(exclude_none = True)
+            print(updates)
+            t.update(updates)
+            tasks[index] = t
+            return t
     raise TaskNotFoundError(f"No task is present with id {task_id}")
 
 

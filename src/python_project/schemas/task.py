@@ -28,3 +28,9 @@ class TaskSuggestion(BaseModel):
 
 class TaskSuggestionRequest(BaseModel):
     message: str
+
+class UpdateToolTaskRequest(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    priority: str | None = None
+    completed: bool | None = None

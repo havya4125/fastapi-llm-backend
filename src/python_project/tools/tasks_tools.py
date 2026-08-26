@@ -4,7 +4,7 @@ from ..handlers.tasks_handlers import (
     get_all_tasks,
     update_single_task,
 )
-from ..schemas.task import CreateTaskRequest, UpdateTaskRequest
+from ..schemas.task import CreateTaskRequest, UpdateToolTaskRequest
 
 
 def create_task_tool(title: str, priority: str, description: str | None = None):
@@ -18,8 +18,8 @@ def create_task_tool(title: str, priority: str, description: str | None = None):
 def get_tasks_tool():
     return get_all_tasks()
 
-def update_task_tool(title: str, description: str, priority: str, completed: bool, task_id: int):
-    task = UpdateTaskRequest(
+def update_task_tool(task_id: int, title: str | None = None, description: str | None = None, priority: str | None = None, completed: bool | None = None):
+    task = UpdateToolTaskRequest(
         title=title,
         description=description,
         priority=priority,
