@@ -1,4 +1,3 @@
-
 from ..exceptions.task_exceptions import TaskNotFoundError
 from ..exceptions.tool_exceptions import ToolNotfoundError
 from ..schemas.agent import AgentResponse, AgentResult
@@ -10,7 +9,7 @@ from ..store.conversation_store import (
 from ..tools.registry import tool_registry
 from ..tools.tool_definitions import task_tools
 from ..utils import append_assistant_message, append_user_message
-from .claude_service import ask_claude, generate_structured_response
+from .claude_service import ask_claude, generate_structured_response, stream_claude
 
 system_prompt = """
 You are an instructor who helps the user plan, create, and manage their tasks and assignments.
@@ -69,3 +68,22 @@ def run_agent(message: str, conversation_id: str | None = None):
         append_assistant_message(messages, response.content)
         append_user_message(messages, tool_results)
     return "I couldn't complete the request within the allowed number of tool calls."
+
+
+def run_agent_stream(message: str, conversation_id: str | None = None):
+    if conversation_id:
+        messages = get_conversation(conversation_id)
+    else:
+        conversation_id = create_conversation()
+        messages = []
+    
+    append_user_message(messages, message)
+    stream_response = stream_claude(messages, system_prompt, task_tools)
+    fullResponse = ""
+
+    for event in stream_response:
+        fullResponse += event
+        yield event
+        
+    append_assistant_message(messages, fullResponse)
+    save_conversation(conversation_id, messages)
