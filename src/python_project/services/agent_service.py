@@ -1,3 +1,5 @@
+import time
+
 from ..exceptions.task_exceptions import TaskNotFoundError
 from ..exceptions.tool_exceptions import ToolNotfoundError
 from ..schemas.agent import AgentResponse, AgentResult
@@ -83,6 +85,8 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
 
     for event in stream_response:
         fullResponse += event
+        time.sleep(1)
+        print(event, end="", flush=True)
         yield event
         
     append_assistant_message(messages, fullResponse)
