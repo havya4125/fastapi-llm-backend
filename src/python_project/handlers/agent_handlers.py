@@ -1,5 +1,3 @@
-from fastapi.responses import StreamingResponse
-
 from ..schemas.agent import AgentRequest
 from ..services.agent_service import run_agent, run_agent_stream
 
@@ -9,7 +7,4 @@ def agent_handler(request: AgentRequest):
     return run_agent(request.message, request.conversation_id)
 
 def agent_stream_handler(request: AgentRequest):
-    return StreamingResponse(
-        run_agent_stream(request.message, request.conversation_id),
-        media_type='text/plain'
-    )
+    return run_agent_stream(request.message, request.conversation_id)

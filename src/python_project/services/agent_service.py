@@ -1,4 +1,4 @@
-import time
+from fastapi.sse import ServerSentEvent
 
 from ..exceptions.task_exceptions import TaskNotFoundError
 from ..exceptions.tool_exceptions import ToolNotfoundError
@@ -80,14 +80,28 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
         messages = []
     
     append_user_message(messages, message)
+
+    yield ServerSentEvent(
+        event='conversation',
+        data={'conversation_id' : conversation_id}
+    )
+
     stream_response = stream_claude(messages, system_prompt, task_tools)
     fullResponse = ""
 
     for event in stream_response:
         fullResponse += event
-        time.sleep(1)
         print(event, end="", flush=True)
-        yield event
+
+        yield ServerSentEvent(
+            event='message',
+            data= {'content' : event}
+        )
         
     append_assistant_message(messages, fullResponse)
     save_conversation(conversation_id, messages)
+
+    yield ServerSentEvent(
+        event='done',
+        data={'conversation_id' : conversation_id}
+    )
