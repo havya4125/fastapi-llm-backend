@@ -49,7 +49,7 @@ def ask_claude(messages, system_prompt: str | None = None, tools : list | None =
     response = client.messages.create(**params)
     return response
 
-def stream_claude(messages, system_prompt: str | None = None):
+def stream_claude(messages, system_prompt: str | None = None, tools: list | None = None):
     params = {
         "model" : "claude-sonnet-4-5",
         "max_tokens" : 1024,
@@ -57,6 +57,9 @@ def stream_claude(messages, system_prompt: str | None = None):
     }
     if(system_prompt):
         params["system"] = system_prompt
+    
+    if tools:
+        params["tools"] = tools
     
     with client.messages.stream(**params) as stream:
         yield from stream.text_stream
