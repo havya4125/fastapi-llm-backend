@@ -43,6 +43,7 @@ def update_task_route(task_id: int, task: UpdateTaskRequest):
 def delete_task_route(task_id: int):
     return delete_single_task(task_id)
 
-@router.post('/task/suggest', status_code=201, response_model= TaskSuggestion)
+
+@router.post("/task/suggest", status_code=201, response_model=TaskSuggestion)
 def generate_task_suggstion(task: TaskSuggestionRequest):
     return task_suggestion(task)

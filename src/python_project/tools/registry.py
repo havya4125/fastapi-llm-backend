@@ -6,8 +6,8 @@ from .tasks_tools import (
 )
 
 tool_registry = {
-    "create_task" : create_task_tool,
-    "get_tasks" : get_tasks_tool,
+    "create_task": create_task_tool,
+    "get_tasks": get_tasks_tool,
     "update_task": update_task_tool,
-    "delete_task": delete_task_tool
+    "delete_task": delete_task_tool,
 }

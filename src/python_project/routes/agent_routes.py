@@ -6,10 +6,12 @@ from ..schemas.agent import AgentRequest, AgentResponse
 
 router = APIRouter()
 
-@router.post('/agent', response_model= AgentResponse, status_code=201)
+
+@router.post("/agent", response_model=AgentResponse, status_code=201)
 def agent_route(request: AgentRequest):
     return agent_handler(request)
 
-@router.post('/agent/stream', response_class= EventSourceResponse)
+
+@router.post("/agent/stream", response_class=EventSourceResponse)
 def agent_stream_route(request: AgentRequest):
     return agent_stream_handler(request)

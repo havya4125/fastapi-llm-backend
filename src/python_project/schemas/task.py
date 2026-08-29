@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 class CreateTaskRequest(BaseModel):
     title: str = Field(min_length=1)
     description: str | None = None
-    priority: Literal["low","medium","high"]
+    priority: Literal["low", "medium", "high"]
 
 
 class UpdateTaskRequest(BaseModel):
@@ -23,13 +23,16 @@ class TaskResponse(BaseModel):
     priority: str
     completed: bool
 
+
 class TaskSuggestion(BaseModel):
     title: str
     priority: str
     estimated_hours: int
 
+
 class TaskSuggestionRequest(BaseModel):
     message: str
+
 
 class UpdateToolTaskRequest(BaseModel):
     title: str | None = None
