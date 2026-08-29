@@ -133,14 +133,21 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
                 if event.delta.type == "text_delta":
                     assistant_content[-1]["text"] += event.delta.text
 
+                    yield ServerSentEvent(
+                        event="message", data={"content": event.delta.text}
+                    )
+
                 elif event.delta.type == "input_json_delta":
                     current_tool["input"] += event.delta.partial_json
 
             elif event.type == "content_block_stop":
                 if current_tool:
-                    tool_input_data = json.loads(current_tool["input"])
-                    tool_calls.append(current_tool)
+                    if current_tool["input"]:
+                        tool_input_data = json.loads(current_tool["input"])
+                    else:
+                        tool_input_data = {}
 
+                    tool_calls.append(current_tool)
                     tool_function = tool_registry.get(current_tool["name"])
 
                     if tool_function is None:
@@ -173,3 +180,5 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
         append_user_message(messages, tool_results)
 
     save_conversation(conversation_id, messages)
+
+    yield ServerSentEvent(event="done", data={"comversation_id", conversation_id})
