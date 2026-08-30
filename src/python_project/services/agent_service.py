@@ -3,7 +3,7 @@ import json
 from fastapi.sse import ServerSentEvent
 
 from ..exceptions.task_exceptions import TaskNotFoundError
-from ..exceptions.tool_exceptions import ToolNotfoundError
+from ..exceptions.tool_exceptions import AgentMaxIterationsError, ToolNotfoundError
 from ..schemas.agent import AgentResponse, AgentResult
 from ..store.conversation_store import (
     create_conversation,
@@ -93,6 +93,8 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
     yield ServerSentEvent(
         event="conversation", data={"conversation_id": conversation_id}
     )
+
+    completed = False
     for _ in range(MAX_TOOL_ITERATIONS):
         stream_response = stream_claude(messages, system_prompt, task_tools)
 
@@ -143,7 +145,20 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
             elif event.type == "content_block_stop":
                 if current_tool:
                     if current_tool["input"]:
-                        tool_input_data = json.loads(current_tool["input"])
+                        try:
+                            tool_input_data = json.loads(current_tool["input"])
+                        except json.JSONDecodeError as err:
+                            tool_results.append(
+                                {
+                                    "type": "tool_result",
+                                    "tool_use_id": current_tool["id"],
+                                    "content": f"Invalid Tool input: {err}",
+                                    "is_error": True,
+                                }
+                            )
+
+                            current_tool = None
+                            continue
                     else:
                         tool_input_data = {}
 
@@ -157,14 +172,20 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
 
                     try:
                         result = tool_function(**tool_input_data)
+                        is_error = False
                     except TaskNotFoundError as err:
                         result = str(err)
+                        is_error = True
+                    except Exception as err:  # noqa: BLE001
+                        result = f"Tool execution failed: {err}"
+                        is_error = True
 
                     tool_results.append(
                         {
                             "type": "tool_result",
                             "tool_use_id": current_tool["id"],
                             "content": str(result),
+                            "is_error": is_error,
                         }
                     )
 
@@ -176,9 +197,13 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
         append_assistant_message(messages, assistant_content)
 
         if not tool_results:
+            completed = True
             break
         append_user_message(messages, tool_results)
 
+    if not completed:
+        raise AgentMaxIterationsError("Maximum Agent Iterations reached")
+
     save_conversation(conversation_id, messages)
 
-    yield ServerSentEvent(event="done", data={"comversation_id", conversation_id})
+    yield ServerSentEvent(event="done", data={"conversation_id": conversation_id})

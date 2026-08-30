@@ -4,7 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from .exceptions.task_exceptions import TaskNotFoundError
-from .exceptions.tool_exceptions import ToolNotfoundError
+from .exceptions.tool_exceptions import AgentMaxIterationsError, ToolNotfoundError
 from .routes.router import router
 from .store.exception import ConversationNotFoundEror
 
@@ -68,3 +68,8 @@ async def tool_not_found_error(request: Request, exc: ToolNotfoundError):
             }
         },
     )
+
+
+@app.exception_handler(AgentMaxIterationsError)
+async def agent_max_iterations_handler(request: Request, exc: AgentMaxIterationsError):
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
