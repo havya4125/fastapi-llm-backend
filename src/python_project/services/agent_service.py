@@ -82,128 +82,134 @@ def run_agent(message: str, conversation_id: str | None = None):
 
 
 def run_agent_stream(message: str, conversation_id: str | None = None):
-    if conversation_id:
-        messages = get_conversation(conversation_id)
-    else:
-        conversation_id = create_conversation()
-        messages = []
+    try:
+        if conversation_id:
+            messages = get_conversation(conversation_id)
+        else:
+            conversation_id = create_conversation()
+            messages = []
 
-    append_user_message(messages, message)
+        append_user_message(messages, message)
 
-    yield ServerSentEvent(
-        event="conversation", data={"conversation_id": conversation_id}
-    )
+        yield ServerSentEvent(
+            event="conversation", data={"conversation_id": conversation_id}
+        )
 
-    completed = False
-    for _ in range(MAX_TOOL_ITERATIONS):
-        stream_response = stream_claude(messages, system_prompt, task_tools)
+        completed = False
+        for _ in range(MAX_TOOL_ITERATIONS):
+            stream_response = stream_claude(messages, system_prompt, task_tools)
 
-        assistant_content = []
-        tool_calls = []
-        tool_results = []
+            assistant_content = []
+            tool_calls = []
+            tool_results = []
 
-        current_tool = None
+            current_tool = None
 
-        for event in stream_response:
-            if event.type == "content_block_start":
-                block = event.content_block
+            for event in stream_response:
+                if event.type == "content_block_start":
+                    block = event.content_block
 
-                if block.type == "text":
-                    assistant_content.append(
-                        {
-                            "type": "text",
-                            "text": "",
-                        }
-                    )
-                elif block.type == "tool_use":
-                    current_tool = {
-                        "id": block.id,
-                        "name": block.name,
-                        "input": "",
-                    }
-
-                    assistant_content.append(
-                        {
-                            "type": "tool_use",
+                    if block.type == "text":
+                        assistant_content.append(
+                            {
+                                "type": "text",
+                                "text": "",
+                            }
+                        )
+                    elif block.type == "tool_use":
+                        current_tool = {
                             "id": block.id,
                             "name": block.name,
-                            "input": {},
+                            "input": "",
                         }
-                    )
 
-            elif event.type == "content_block_delta":
-                if event.delta.type == "text_delta":
-                    assistant_content[-1]["text"] += event.delta.text
-
-                    yield ServerSentEvent(
-                        event="message", data={"content": event.delta.text}
-                    )
-
-                elif event.delta.type == "input_json_delta":
-                    current_tool["input"] += event.delta.partial_json
-
-            elif event.type == "content_block_stop":
-                if current_tool:
-                    if current_tool["input"]:
-                        try:
-                            tool_input_data = json.loads(current_tool["input"])
-                        except json.JSONDecodeError as err:
-                            tool_results.append(
-                                {
-                                    "type": "tool_result",
-                                    "tool_use_id": current_tool["id"],
-                                    "content": f"Invalid Tool input: {err}",
-                                    "is_error": True,
-                                }
-                            )
-
-                            current_tool = None
-                            continue
-                    else:
-                        tool_input_data = {}
-
-                    tool_calls.append(current_tool)
-                    tool_function = tool_registry.get(current_tool["name"])
-
-                    if tool_function is None:
-                        raise ToolNotfoundError(
-                            f"Tool '{current_tool['name']}' is not registered"
+                        assistant_content.append(
+                            {
+                                "type": "tool_use",
+                                "id": block.id,
+                                "name": block.name,
+                                "input": {},
+                            }
                         )
 
-                    try:
-                        result = tool_function(**tool_input_data)
-                        is_error = False
-                    except TaskNotFoundError as err:
-                        result = str(err)
-                        is_error = True
-                    except Exception as err:  # noqa: BLE001
-                        result = f"Tool execution failed: {err}"
-                        is_error = True
+                elif event.type == "content_block_delta":
+                    if event.delta.type == "text_delta":
+                        assistant_content[-1]["text"] += event.delta.text
 
-                    tool_results.append(
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": current_tool["id"],
-                            "content": str(result),
-                            "is_error": is_error,
-                        }
-                    )
+                        yield ServerSentEvent(
+                            event="message", data={"content": event.delta.text}
+                        )
 
-                    assistant_content[-1]["input"] = tool_input_data
+                    elif event.delta.type == "input_json_delta":
+                        current_tool["input"] += event.delta.partial_json
 
-                    current_tool = None
+                elif event.type == "content_block_stop":
+                    if current_tool:
+                        if current_tool["input"]:
+                            try:
+                                tool_input_data = json.loads(current_tool["input"])
+                            except json.JSONDecodeError as err:
+                                tool_results.append(
+                                    {
+                                        "type": "tool_result",
+                                        "tool_use_id": current_tool["id"],
+                                        "content": f"Invalid Tool input: {err}",
+                                        "is_error": True,
+                                    }
+                                )
 
-        # After the entire claude response is processed
-        append_assistant_message(messages, assistant_content)
+                                current_tool = None
+                                continue
+                        else:
+                            tool_input_data = {}
 
-        if not tool_results:
-            completed = True
-            break
-        append_user_message(messages, tool_results)
+                        tool_calls.append(current_tool)
+                        tool_function = tool_registry.get(current_tool["name"])
 
-    if not completed:
-        raise AgentMaxIterationsError("Maximum Agent Iterations reached")
+                        if tool_function is None:
+                            raise ToolNotfoundError(
+                                f"Tool '{current_tool['name']}' is not registered"
+                            )
 
-    save_conversation(conversation_id, messages)
+                        try:
+                            result = tool_function(**tool_input_data)
+                            is_error = False
+                        except TaskNotFoundError as err:
+                            result = str(err)
+                            is_error = True
+                        except Exception as err:  # noqa: BLE001
+                            result = f"Tool execution failed: {err}"
+                            is_error = True
 
-    yield ServerSentEvent(event="done", data={"conversation_id": conversation_id})
+                        tool_results.append(
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": current_tool["id"],
+                                "content": str(result),
+                                "is_error": is_error,
+                            }
+                        )
+
+                        assistant_content[-1]["input"] = tool_input_data
+
+                        current_tool = None
+
+            # After the entire claude response is processed
+            append_assistant_message(messages, assistant_content)
+
+            if not tool_results:
+                completed = True
+                break
+            append_user_message(messages, tool_results)
+
+        if not completed:
+            raise AgentMaxIterationsError("Maximum Agent Iterations reached")
+
+        save_conversation(conversation_id, messages)
+
+        yield ServerSentEvent(event="done", data={"conversation_id": conversation_id})
+
+    except AgentMaxIterationsError as err:
+        yield ServerSentEvent(event="error", data={"message": str(err)})
+    except ToolNotfoundError as err:
+        yield ServerSentEvent(event="error", data={"message": str(err)})
