@@ -100,7 +100,6 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
             stream_response = stream_claude(messages, system_prompt, task_tools)
 
             assistant_content = []
-            tool_calls = []
             tool_results = []
 
             current_tool = None
@@ -163,7 +162,6 @@ def run_agent_stream(message: str, conversation_id: str | None = None):
                         else:
                             tool_input_data = {}
 
-                        tool_calls.append(current_tool)
                         tool_function = tool_registry.get(current_tool["name"])
 
                         if tool_function is None:
