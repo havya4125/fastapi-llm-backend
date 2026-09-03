@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from ..repositories.task_repository import TaskRepository
 from .models import Task
+
+repository = TaskRepository()
 
 load_dotenv()
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -21,12 +24,15 @@ SessionLocal = sessionmaker(
 
 with SessionLocal() as session:
     task = Task(
-        title = "Learn about SQLalchemy",
-        description = "Understand sessions and models",
-        priority = "high"
+        title = "Learn about node.js",
+        description = "Learn abouut stream mainly",
+        priority = "high",
+
     )
+    created_task = repository.create(session, task)
 
-    session.add(task)
-    session.commit()
-
-    print(task.id)
+    if created_task:
+        print(created_task.id)
+        print(created_task.title)
+    else:
+        print("Task not found")
